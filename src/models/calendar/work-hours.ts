@@ -1,4 +1,4 @@
 export default class WorkHours {
-    start: number = 9;
-    end: number = 17;
+    start: string = "09:00";
+    end: string = "17:00";
 }

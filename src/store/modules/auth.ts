@@ -4,15 +4,17 @@ import { FirebaseError } from 'firebase';
 import { AuthUser } from '@/models/store/firebase-auth-user';
 import { authState } from '@/models/store/store-types';
 import { FBAuthUserAdapter } from '@/models/adapters/firebase-auth-user-adapter';
+import { MutationTree, ActionTree, GetterTree } from 'vuex';
 
 const state: authState = {
   user: null,
   authentication_error: null,
   authStateFinished: false,
-  finishedAuthInteraction: false
+  finishedAuthInteraction: false,
+  preAuthRoute: ""
 };
 
-const mutations = {
+const mutations: MutationTree<any> = {
   [types.SET_USER](stt: authState, user: AuthUser) {
     stt.user = user;
   },
@@ -24,10 +26,16 @@ const mutations = {
   },
   [types.SET_FINISHED_AUTH_INTERACTION](stt: authState, finished: boolean) {
     stt.finishedAuthInteraction = finished;
+  },
+  [types.SET_PRE_AUTH_ROUTE](stt: authState, route: string) {
+    stt.preAuthRoute = route;
   }
 };
 
-const actions = {
+const actions: ActionTree<any, any> = {
+  setPreAuthRoute({ commit, dispatch, state }: any, route: string) {
+    commit(types.SET_PRE_AUTH_ROUTE, route);
+  },
   async updateUserData({ commit, dispatch, state }: any, user: firebase.UserInfo) {
     let authUser: AuthUser;
     try {
@@ -51,36 +59,41 @@ const actions = {
         await commit(types.SET_USER, null);
         dispatch("propagateError", err);
       }
-      await commit(types.SET_AUTH_STATE_FINISHED, true);
+      // await commit(types.SET_AUTH_STATE_FINISHED, true);
       await commit(types.SET_FINISHED_AUTH_INTERACTION, true);
     } catch (err) {
       dispatch("propagateError", err);
       return Promise.reject(err);
     }
   },
-  async authAutoLogin({ commit, dispatch, state }: any, user: firebase.UserInfo) {
+  async authAutoLogin({ commit, dispatch, state, rootState }, user: firebase.UserInfo) {
+    console.log("Auth/authAutoLogin - start");
     try {
+      console.log("Auth/authAutoLogin - user=", user);
       if (!user) {
         try {
+          console.log("Auth/authAutoLogin - calling FirebaseAuth/getRedirectResult");
           const result = await FirebaseAuth().getRedirectResult();
           if (result.user) {
             user = result.user;
             const createdUser = new FBAuthUserAdapter(user).adaptAuthUser();
+            console.log("Auth/authAutoLogin - calling Auth/updateUserData");
             await dispatch("updateUserData", createdUser);
           }
         } catch (err) {
           await dispatch("propagateError", err.message, { root: true });
           await commit(types.SET_AUTHENTICATION_ERROR, err);
         }
-        await commit(types.SET_AUTH_STATE_FINISHED, true);
-        await commit(types.SET_FINISHED_AUTH_INTERACTION, true);
       } else {
         const parsedUser = new FBAuthUserAdapter(user).adaptAuthUser();
         await commit(types.SET_USER, parsedUser);
       }
+      console.log("Auth/authAutoLogin - calling UserSettings/getUserSettings");
+      await dispatch("getUserSettings", null, { root: true });
     } catch (err) {
       dispatch("propagateError", err);
     }
+    console.log("Auth/authAutoLogin - setting auth state finished true");
     await commit(types.SET_AUTH_STATE_FINISHED, true);
     await commit(types.SET_FINISHED_AUTH_INTERACTION, true);
   },
@@ -108,7 +121,7 @@ const actions = {
   }
 };
 
-const getters = {
+const getters: GetterTree<any, any> = {
   user(stt: authState) {
     return stt.user;
   },
@@ -123,6 +136,9 @@ const getters = {
   },
   finishedAuthInteraction(stt: authState) {
     return stt.finishedAuthInteraction;
+  },
+  preAuthRoute(stt: authState) {
+    return stt.preAuthRoute;
   }
 };
 

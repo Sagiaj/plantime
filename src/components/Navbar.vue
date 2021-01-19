@@ -61,7 +61,7 @@
             <v-list-item-icon class="py-6">
               <v-icon>mdi-format-list-numbered-rtl</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>המשימות שלי</v-list-item-title>
+            <v-list-item-title>ערוך משימות</v-list-item-title>
             <v-list-item-action
               ><v-btn icon>
                 <v-icon>mdi-arrow-left</v-icon></v-btn
@@ -70,6 +70,14 @@
           </v-list-item>
         </v-list>
         <v-divider></v-divider>
+        <v-container v-if="isHomeView">
+          <TasksList />
+          <!-- <v-row justify="center">
+            <v-col align="center">
+              lola :D
+            </v-col>
+          </v-row> -->
+        </v-container>
       </template>
     </NavLoader>
   </v-navigation-drawer>
@@ -78,13 +86,17 @@
 <script>
 import { mapGetters, mapActions } from "vuex";
 import NavLoader from "@/components/auth/NavLoader";
+import TasksList from "@/components/tasks/TasksList";
 
 export default {
   name: "Navbar",
   props: ["enabled"],
-  components: { NavLoader },
+  components: { NavLoader, TasksList },
   computed: {
-    ...mapGetters(["user", "authStateFinished"])
+    ...mapGetters(["user", "authStateFinished"]),
+    isHomeView() {
+      return this.$route.name == "MainView";
+    }
   },
   methods: {
     ...mapActions(["propagateError", "authSignOut", "authLogin"]),

@@ -13,9 +13,12 @@ new Vue({
   store,
   vuetify,
   methods: {
-    ...mapActions(["authAutoLogin", "propagateError"])
+    ...mapActions(["authAutoLogin", "propagateError", "setPreAuthRoute"])
   },
   beforeMount() {
+    const basePath = `${window.location.origin}/#`;
+    const relativePath = window.location.href.split(basePath)[1];
+    this.setPreAuthRoute(relativePath);
     import('firebase/auth').then(() => {
       firebase.auth().onAuthStateChanged(async user => await this.authAutoLogin(user));
     });

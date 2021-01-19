@@ -8,6 +8,7 @@ export type authState = {
   authentication_error: null | FirebaseError;
   authStateFinished: boolean;
   finishedAuthInteraction: boolean;
+  preAuthRoute: string;
 };
 
 export type userSettingsState = {

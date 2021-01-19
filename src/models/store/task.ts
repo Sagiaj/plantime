@@ -10,6 +10,8 @@ export default class Task extends BelongsToUser {
     belongs_to_user_email: string = "";
     start_ts: number = 0;
     end_ts: number = 0;
+    goal: string = "";
+    title: string = "";
 
     constructor(fb_data?: Task) {
         super(fb_data);
@@ -21,6 +23,8 @@ export default class Task extends BelongsToUser {
             this.start_ts = fb_data.start_ts || 0;
             this.status = fb_data.status || TaskStatus.ToDo;
             this.is_active = fb_data.is_active || false;
+            this.goal = fb_data.goal || "";
+            this.title = fb_data.title || "";
         }
     }
 
